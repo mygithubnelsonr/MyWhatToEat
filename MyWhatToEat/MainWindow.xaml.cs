@@ -1,10 +1,10 @@
 ﻿using MyWhatToEat.Model;
-using Newtonsoft.Json;
 using System;
 using System.Collections.ObjectModel;
-using System.IO;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace MyWhatToEat
@@ -14,15 +14,15 @@ namespace MyWhatToEat
     /// </summary>
     public partial class MainWindow : Window
     {
-        private ObservableCollection<Meal> mealList = new System.Collections.ObjectModel.ObservableCollection<Meal>();
-        private string _fileName = "meals.json";
+        private ObservableCollection<Meal> mealList = new ObservableCollection<Meal>();
+        private string _fileName = "meals.xml";
         private int _count = 0;
 
         public MainWindow()
         {
             InitializeComponent();
             listboxMeals.ItemsSource = mealList;
-            Load();
+            LoadXML();
         }
 
         private void Move_Window(object sender, MouseButtonEventArgs e)
@@ -59,12 +59,21 @@ namespace MyWhatToEat
             listboxMeals.SelectedIndex = index;
             listboxMeals.Focus();
 
-            Write();
+            WriteXML();
         }
 
-        private void buttonSave_Click(object sender, RoutedEventArgs e)
+        private void buttonPrint_Click(object sender, RoutedEventArgs e)
         {
+            PrintDialog printDlg = new PrintDialog();
+            printDlg.PrintVisual(this, "MyWhatToEat Printing");
 
+            var path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string filename = path + "\\MyWhatToEatPrinting.pdf";
+
+            ProcessStartInfo processStartInfo = new ProcessStartInfo();
+            processStartInfo.Arguments = filename;
+            processStartInfo.FileName = "explorer.exe";
+            Process.Start(processStartInfo);
         }
 
         private void textboxList_KeyUp(object sender, KeyEventArgs e)
@@ -73,7 +82,7 @@ namespace MyWhatToEat
                 return;
 
             if (e.Key == Key.Enter)
-                Write();
+                WriteXML();
         }
 
         private void textboxInput_KeyUp(object sender, KeyEventArgs e)
@@ -85,37 +94,24 @@ namespace MyWhatToEat
                 if (mealList.Count > 0)
                     id = mealList.Max(p => p.Nr) + 1;
 
-                mealList.Add(new Meal() { Nr = id, Content = textboxInput.Text, Count = _count, Date = DateTime.Now.Date.ToShortDateString() });
+                mealList.Add(new Meal() { Nr = id, Content = textboxInput.Text, Count = _count, Date = "" });
                 textboxInput.Visibility = Visibility.Hidden;
-
-                Write();
+                WriteXML();
             }
             if (e.Key == Key.Escape)
                 textboxInput.Visibility = Visibility.Hidden;
         }
 
-        private void Load()
+        private void WriteXML()
         {
-            if (!File.Exists(_fileName))
-                return;
-
-            var jsonData = File.ReadAllText(_fileName);
-            mealList = JsonConvert.DeserializeObject<ObservableCollection<Meal>>(jsonData);
-
-            listboxMeals.ItemsSource = mealList;
-            listboxMeals.Focus();
+            XmlProcessor.XMLWriteMeals(mealList);
         }
 
-        private void Write()
+        private void LoadXML()
         {
-            JsonSerializer serializer = new JsonSerializer();
-            serializer.Formatting = Formatting.Indented;
-
-            using (StreamWriter sw = new StreamWriter(_fileName))
-            using (JsonWriter writer = new JsonTextWriter(sw))
-            {
-                serializer.Serialize(writer, mealList);
-            }
+            mealList = XmlProcessor.XMLLoadMeals(_fileName);
+            listboxMeals.ItemsSource = mealList;
+            listboxMeals.Focus();
         }
 
         private void buttonCounter_Click(object sender, RoutedEventArgs e)
@@ -130,15 +126,15 @@ namespace MyWhatToEat
             var item = (Meal)listboxMeals.SelectedItem;
 
             int id = item.Nr;
-
             mealList[id].Count += 1;
+            mealList[id].Date = DateTime.Now.Date.ToShortDateString();
 
             listboxMeals.ItemsSource = "";
             listboxMeals.ItemsSource = mealList;
             listboxMeals.SelectedIndex = listindex;
             listboxMeals.Focus();
 
-            Write();
+            WriteXML();
         }
     }
 }

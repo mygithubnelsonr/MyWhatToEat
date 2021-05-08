@@ -12,11 +12,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Model\Meal.cs" />
+    <COMReference Include="FileViewLib.dll">
+      <WrapperTool>tlbimp</WrapperTool>
+      <VersionMinor>0</VersionMinor>
+      <VersionMajor>1</VersionMajor>
+      <Guid>be79c475-d632-4a57-91b3-da044fa27cda</Guid>
+      <Lcid>0</Lcid>
+      <Isolated>false</Isolated>
+    </COMReference>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <None Include="Model\Meal.cs" />
   </ItemGroup>
 
   <ItemGroup>

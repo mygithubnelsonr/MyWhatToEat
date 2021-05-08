@@ -20,7 +20,7 @@
                 <Button x:Name="buttonAdd" Content="Add" Click="buttonAdd_Click"/>
                 <Button x:Name="buttonRemove" Content="Remove" Click="buttonRemove_Click"/>
             </StackPanel>
-            <Button Grid.Column="1" x:Name="buttonSave" Content="Save" Visibility="Hidden"  Click="buttonSave_Click"/>
+            <Button Grid.Column="1" x:Name="buttonPrint" Content="Print" Visibility="Visible"  Click="buttonPrint_Click"/>
             <Button Grid.Column="2" x:Name="buttonCounter" Content="+" FontWeight="ExtraBold" Click="buttonCounter_Click" Width="40"
                     HorizontalAlignment="Left"/>
         </Grid>
