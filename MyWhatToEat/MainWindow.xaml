@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="My What to eat List" Icon="Image/ToDo.ico" Height="300" Width="550" ResizeMode="NoResize"
             WindowStartupLocation="CenterScreen" Background="#FF050557" WindowStyle="None"
-            MouseLeftButtonDown="Move_Window">
+            MouseLeftButtonDown="Move_Window" Closing="Window_Closing">
     <DockPanel Background="Beige">
         <!--Button Panel-->
         <Grid DockPanel.Dock="Bottom" Background="LightGray">

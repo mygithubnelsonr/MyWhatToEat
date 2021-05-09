@@ -1,6 +1,7 @@
 ﻿using MyWhatToEat.Model;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -10,6 +11,19 @@ namespace MyWhatToEat
     public static class XmlProcessor
     {
         public static ObservableCollection<Meal> ListOfMeals;
+
+        public static ObservableCollection<Meal> XMLLoadMeals(string filename)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(ObservableCollection<Meal>));
+
+            // A FileStream is needed to read the XML document.
+            using (Stream fs = new FileStream(filename, FileMode.Open))
+            {
+                ObservableCollection<Meal> meals;
+                meals = (ObservableCollection<Meal>)serializer.Deserialize(fs);
+                return meals;
+            }
+        }
 
         public static void XMLWriteMeals(ObservableCollection<Meal> mealList)
         {
@@ -28,20 +42,15 @@ namespace MyWhatToEat
                 writer.Formatting = System.Xml.Formatting.Indented;
                 serializer.Serialize(writer, mealList);
             }
+            insertLineToSimpleFile();
         }
 
-        public static ObservableCollection<Meal> XMLLoadMeals(string filename)
+        private static void insertLineToSimpleFile()
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(ObservableCollection<Meal>));
-
-            // A FileStream is needed to read the XML document.
-            using (Stream fs = new FileStream(filename, FileMode.Open))
-            {
-                ObservableCollection<Meal> meals;
-                meals = (ObservableCollection<Meal>)serializer.Deserialize(fs);
-                return meals;
-            }
+            string style = @"<?xml-stylesheet type = 'text/xsl' version='1.0' href='meals.xslt' ?>";
+            var txtLines = File.ReadAllLines("meals.xml").ToList();
+            txtLines.Insert(1, style);
+            File.WriteAllLines("meals.xml", txtLines);
         }
-
     }
 }

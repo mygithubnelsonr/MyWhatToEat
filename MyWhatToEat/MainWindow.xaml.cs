@@ -1,4 +1,5 @@
 ﻿using MyWhatToEat.Model;
+using Renci.SshNet;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -28,6 +29,11 @@ namespace MyWhatToEat
         private void Move_Window(object sender, MouseButtonEventArgs e)
         {
             this.DragMove();
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            UploadFile();
         }
 
         private void buttonMinimize_Click(object sender, RoutedEventArgs e)
@@ -76,6 +82,29 @@ namespace MyWhatToEat
             Process.Start(processStartInfo);
         }
 
+        private void buttonCounter_Click(object sender, RoutedEventArgs e)
+        {
+            if (listboxMeals.SelectedItems.Count == 0)
+            {
+                MessageBox.Show("no listitem selected!");
+                return;
+            }
+
+            var listindex = listboxMeals.SelectedIndex;
+            var item = (Meal)listboxMeals.SelectedItem;
+
+            int id = item.Nr;
+            mealList[id].Count += 1;
+            mealList[id].Date = DateTime.Now.Date.ToShortDateString();
+
+            listboxMeals.ItemsSource = "";
+            listboxMeals.ItemsSource = mealList;
+            listboxMeals.SelectedIndex = listindex;
+            listboxMeals.Focus();
+
+            WriteXML();
+        }
+
         private void textboxList_KeyUp(object sender, KeyEventArgs e)
         {
             if (listboxMeals.SelectedItems.Count == 0)
@@ -102,11 +131,6 @@ namespace MyWhatToEat
                 textboxInput.Visibility = Visibility.Hidden;
         }
 
-        private void WriteXML()
-        {
-            XmlProcessor.XMLWriteMeals(mealList);
-        }
-
         private void LoadXML()
         {
             mealList = XmlProcessor.XMLLoadMeals(_fileName);
@@ -114,27 +138,38 @@ namespace MyWhatToEat
             listboxMeals.Focus();
         }
 
-        private void buttonCounter_Click(object sender, RoutedEventArgs e)
+        private void WriteXML()
         {
-            if (listboxMeals.SelectedItems.Count == 0)
-            {
-                MessageBox.Show("no listitem selected!");
-                return;
-            }
-
-            var listindex = listboxMeals.SelectedIndex;
-            var item = (Meal)listboxMeals.SelectedItem;
-
-            int id = item.Nr;
-            mealList[id].Count += 1;
-            mealList[id].Date = DateTime.Now.Date.ToShortDateString();
-
-            listboxMeals.ItemsSource = "";
-            listboxMeals.ItemsSource = mealList;
-            listboxMeals.SelectedIndex = listindex;
-            listboxMeals.Focus();
-
-            WriteXML();
+            XmlProcessor.XMLWriteMeals(mealList);
         }
+
+        private void UploadFile()
+        {
+            try
+            {
+                string host = "ssh.strato.de";
+                int port = 22;
+                string user = "www.sys-service.de";
+                string pass = "!bk7a1bbk7a1b?";
+
+                var connectionInfo = new ConnectionInfo(host, "sftp", new PasswordAuthenticationMethod(user, pass));
+
+                using (var sftp = new SftpClient(host, port, user, pass))
+                {
+                    sftp.Connect();
+                    sftp.ChangeDirectory("/bobandsonja");
+                    using (var uplfileStream = System.IO.File.OpenRead(_fileName))
+                    {
+                        sftp.UploadFile(uplfileStream, _fileName, true);
+                    }
+                    sftp.Disconnect();
+                }
+            }
+            catch (Exception err)
+            {
+                MessageBox.Show(err.Message);
+            }
+        }
+
     }
 }
