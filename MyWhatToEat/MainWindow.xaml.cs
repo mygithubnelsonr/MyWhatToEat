@@ -4,6 +4,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,8 +14,15 @@ namespace MyWhatToEat
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
+
+    /// History
+    /// Version Date        Content
+    /// 1.2.0   2021-07-06  download meals.xml from URL
+    /// 
+
     public partial class MainWindow : Window
     {
+
         private ObservableCollection<Meal> mealList = new ObservableCollection<Meal>();
         private string _fileName = "meals.xml";
         private int _count = 0;
@@ -22,7 +30,10 @@ namespace MyWhatToEat
         public MainWindow()
         {
             InitializeComponent();
+            textblockVersion.Text = "v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
             listboxMeals.ItemsSource = mealList;
+
+            GetXMLFile();
             LoadXML();
         }
 
@@ -143,21 +154,32 @@ namespace MyWhatToEat
             XmlProcessor.XMLWriteMeals(mealList);
         }
 
+        private void GetXMLFile()
+        {
+            using (var client = new WebClient())
+            {
+                client.DownloadFile("http://4youreyesonly.bobandsonja.de/meals.xml", _fileName);
+            }
+        }
+
         private void UploadFile()
         {
             try
             {
-                string host = "ssh.strato.de";
-                int port = 22;
-                string user = "www.sys-service.de";
-                string pass = "!bk7a1bbk7a1b?";
+                string orgstring = CrypterProcessor.Decode();
+
+                var al = orgstring.Split(',');
+                string host = al[0];
+                string port = al[1];
+                string user = al[2];
+                string pass = al[3];
 
                 var connectionInfo = new ConnectionInfo(host, "sftp", new PasswordAuthenticationMethod(user, pass));
 
-                using (var sftp = new SftpClient(host, port, user, pass))
+                using (var sftp = new SftpClient(host, int.Parse(port), user, pass))
                 {
                     sftp.Connect();
-                    sftp.ChangeDirectory("/bobandsonja");
+                    sftp.ChangeDirectory("/bobandsonja/4youreyesonly");
                     using (var uplfileStream = System.IO.File.OpenRead(_fileName))
                     {
                         sftp.UploadFile(uplfileStream, _fileName, true);
